@@ -25,6 +25,7 @@ function App() {
   const [isLoading, setIsLoading] = useState(true);
 
   const handleSelectDate = (item: string) => {
+    setPlayers([]);
     setSelectedDate(item);
     setIsLoading(true);
   };
@@ -73,6 +74,10 @@ function App() {
               dayNames[dateValue.getDay()]
             }, ${dateValue.toLocaleDateString()}`}
           </button>
+          <p>Sân Bảo Hà</p>
+          <p className={
+              isLoading && (strDate(dateValue) === selectedDate)? "visible": "collapse"
+            }>Loading ...</p>
           {
             <ul
               // className="list-group"
