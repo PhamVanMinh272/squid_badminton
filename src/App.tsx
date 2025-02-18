@@ -1,6 +1,6 @@
 // import { useState } from "react";
 import { useEffect, useState } from "react";
-import { getDays } from "./utils";
+import { toDate } from "./utils";
 import { BASE_URL } from "./url_sets";
 // import './App.css'
 
@@ -9,43 +9,26 @@ interface Player {
   name: string;
 }
 
-function strDate(inputDate: Date) {
-  const offset = inputDate.getTimezoneOffset();
-  inputDate = new Date(inputDate.getTime() - offset * 60 * 1000);
-  return inputDate.toISOString().split("T")[0];
+interface Match {
+  id: number;
+  matchDate: string;
+  court: string;
+  players: Player[];
 }
 
 function App() {
-  // 2 mean tuesday
-  const this_days = getDays(2025, 1, [0, 2]);
-  const next_days = getDays(2025, 2, [0, 2]);
-  const dates = [...this_days, ...next_days];
-  const [selectedDate, setSelectedDate] = useState(strDate(dates[0]));
-  const [players, setPlayers] = useState<Player[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-
-  const handleSelectDate = (item: string) => {
-    setPlayers([]);
-    setSelectedDate(item);
-    setIsLoading(true);
-  };
+  const [matches, setMatches] = useState<Match[]>([]);
 
   useEffect(() => {
-    const fetchPlayers = async () => {
+    const fetchMatches = async () => {
       let response;
-      if (selectedDate) {
-        response = await fetch(`${BASE_URL}/players?matchDate=${selectedDate}`);
-      } else {
-        response = await fetch(`${BASE_URL}/products`);
-      }
-
+      response = await fetch(`${BASE_URL}/matches`);
       const response_data = await response.json();
-      const fetched_data = response_data.data as Player[];
-      setPlayers(fetched_data);
-      setIsLoading(false);
+      const fetched_data = response_data.data as Match[];
+      setMatches(fetched_data);
     };
-    fetchPlayers();
-  }, [selectedDate]);
+    fetchMatches();
+  }, []);
 
   const dayNames = [
     "Chủ Nhật",
@@ -60,34 +43,18 @@ function App() {
   return (
     <div className="container">
       <h3>Check xem hum nay có những ai nò</h3>
-      {dates.map((dateValue) => (
+      <p className={matches.length > 0 ? "collapse" : "visible"}>Loading ...</p>
+      {matches.map((match) => (
         <div>
-          <button
-            type="button"
-            className="btn btn-success"
-            onClick={() => {
-              // handleSelectDate(date_value.toISOString().split("T")[0]);
-              handleSelectDate(strDate(dateValue));
-            }}
-          >
-            {`${
-              dayNames[dateValue.getDay()]
-            }, ${dateValue.toLocaleDateString()}`}
+          <hr></hr>
+          <button type="button" className="btn btn-success">
+            {`${dayNames[toDate(match.matchDate).getDay()]}, ${toDate(
+              match.matchDate
+            ).toLocaleDateString()}, ${match.court}`}
           </button>
-          <p>Sân Bảo Hà</p>
-          <p className={
-              isLoading && (strDate(dateValue) === selectedDate)? "visible": "collapse"
-            }>Loading ...</p>
           {
-            <ul
-              // className="list-group"
-              className={
-                (strDate(dateValue) === selectedDate) && (~isLoading)
-                  ? "list-group"
-                  : "list-group collapse"
-              }
-            >
-              {players.map((item) => (
+            <ul className="list-group">
+              {match.players.map((item) => (
                 <li key={item.id} className="list-group-item">
                   {item.name}
                 </li>
